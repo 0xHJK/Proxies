@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import re, requests, threading
-import pyout
+from pyecho import echo
 
 # 封装http请求
 def reqs(**kwargs):
@@ -18,13 +18,13 @@ def reqs(**kwargs):
     try:
         r = requests.get(url, headers = headers, proxies = proxies, timeout = timeout)
         if r.status_code == 200:
-            pyout.success('请求 %s 成功' % url)
+            echo.success('请求 %s 成功' % url)
             # 根据传入的正则返回需要的数据
             return re.findall(rex, r.text)
         else:
-            pyout.error('%d %s' % (r.status_code, url))
+            echo.error('%d %s' % (r.status_code, url))
     except Exception as e:
-        pyout.error('请求 %s 异常 %s' % (url, e))
+        echo.error('请求 %s 异常 %s' % (url, e))
     return []
 
 # 从sites.txt文件中获取站点列表
@@ -53,7 +53,7 @@ def check_ip_ports(ip_ports, func):
             rex = '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', 
             proxies = proxies, timeout = timeout)
         if len(ips) > 0 and ips[0] in ip_port:
-            pyout.success('%s has checked' % ip_port)
+            echo.success('%s has checked' % ip_port)
             # 如果可用则调用回调函数
             func(ip_port)
 
@@ -91,4 +91,4 @@ if __name__ == '__main__':
     # 保存可用的代理到proxies.txt
     save_ip_ports('proxies.txt', ip_ports_ok)
 
-    pyout.info('All done : )')
+    echo.info('All done : )')

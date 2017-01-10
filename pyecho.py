@@ -85,5 +85,8 @@ class Pyout(object):
     def success(self, m):
         self.log(m, self.s.green, '✅  ')
 
-sys.modules[__name__]=Pyout()
+fg = ColorFore()
+bg = ColorBack()
+style = Style()
+echo = Pyout()
 
