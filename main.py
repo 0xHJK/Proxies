@@ -49,7 +49,7 @@ def check_ip_ports(ip_ports, func):
             'http': 'http://%s' % ip_port,
             'https': 'https://%s' % ip_port
         }
-        ips = reqs(url = 'http://github.tk:9001', 
+        ips = reqs(url = 'http://ip.github.tk', 
             rex = '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', 
             proxies = proxies, timeout = timeout)
         if len(ips) > 0 and ips[0] in ip_port:
