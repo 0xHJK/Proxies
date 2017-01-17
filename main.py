@@ -49,6 +49,9 @@ def check_ip_ports(ip_ports, func):
             'http': 'http://%s' % ip_port,
             'https': 'https://%s' % ip_port
         }
+        # 自建的服务器，用来返回IP和代理IP
+        # 可能不稳定，如有需要请自行修改或搭建
+        # 参考https://github.com/0xHJK/return_ip
         ips = reqs(url = 'http://ip.github.tk', 
             rex = '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', 
             proxies = proxies, timeout = timeout)
