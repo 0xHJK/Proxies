@@ -57,28 +57,25 @@ def get_proxies_set() -> list:
     return list(set(proxies))
 
 def check_proxies_thread(proxies, callback):
-    ''' 检查代理是否有效，包括http代理和socks代理 '''
+    ''' 检查代理是否有效 '''
     for proxy in proxies:
-        for proto in ['http://', 'socks5://']:
-            proxy = proto + proxy
-            ip = get_list_by_rex(
-                url='http://2019.ip138.com/ic.asp',
-                rex=r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}',
-                proxies={'http': proxy}
-            )
-            # 如果返回的IP和代理所用IP一致则判断有效
-            if ip and ip[0] in proxy:
-                print(colorize('success', proxy, 'checked ok.'))
-                callback(proxy)
+        proxy = 'http://' + proxy
+        ip = get_list_by_rex(
+            url='http://2019.ip138.com/ic.asp',
+            rex=r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}',
+            proxies={'http': proxy}
+        )
+        # 如果返回的IP和代理所用IP一致则判断有效
+        if ip and ip[0] in proxy:
+            print(colorize('success', proxy, 'checked ok.'))
+            callback(proxy)
 
 def check_and_save_proxies(filename, proxies):
     ''' 获得所有检查过的代理 '''
     checker_pool = []
-
     def save_proxy(proxy):
         with open(filename, 'a') as f:
             f.write(proxy + '\n')
-
     for i in range(0, len(proxies), 20):
         t = threading.Thread(target=check_proxies_thread, args=(proxies[i:i+20], save_proxy))
         checker_pool.append(t)
@@ -88,9 +85,10 @@ def check_and_save_proxies(filename, proxies):
 
 if __name__ == '__main__':
     start = time.time()
-    # proxies = get_proxies_set()
-    # check_and_save_proxies('proxies.txt', proxies)
+    proxies = get_proxies_set()
+    check_and_save_proxies('proxies.txt', proxies)
     stop = time.time()
-    print(colorize('success', 'Proxies Count: %s' % len(open('proxies.txt', 'r').readlines())))
-    print(colorize('success', 'Time Spent: %s' % datetime.timedelta(stop - start)))
-    print(colorize('success', 'Done. :)'))
+    print(colorize('success', '\n代理总数: %s' % len(proxies)))
+    print(colorize('success', '有效代理数: %s' % len(open('proxies.txt', 'r').readlines())))
+    print(colorize('success', '时间消耗: %s' % datetime.timedelta(seconds=(stop - start))))
+    print(colorize('success', 'Done. :)\n'))
