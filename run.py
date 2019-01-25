@@ -2,52 +2,44 @@
 #-*- coding:utf-8 -*-  
 """
 @author: HJK 
-@file: run.py
-@time: 2019-01-24
-
-100行代码快速获得一个代理池
-
 """
-import time, datetime, re, threading, platform, requests
+import os, sys, getopt, datetime, re, threading, platform, requests
 
 SITES = ['http://www.proxyserverlist24.top/', 'http://www.live-socks.net/']
 HEADERS = {'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Win64; x64; Trident/6.0)'}
 TIMEOUT = 5
-PROXIES = {'http': 'socks5://127.0.0.1:1086', 'https': 'socks5://127.0.0.1:1086'}
+SPIDER_PROXIES = {'http': 'socks5://127.0.0.1:1086', 'https': 'socks5://127.0.0.1:1086'}
+IP138 = 'http://2019.ip138.com/ic.asp'
 
-def colorize(color, *args):
+def echo(color, *args):
     colors = {'error': '\033[91m', 'success': '\033[94m', 'info': '\033[93m'}
     if not color in colors or platform.system() == 'Windows':
-        return ' '.join(args)
-    return colors[color] + ' '.join(args) + '\033[0m'
+        print(' '.join(args))
+    print(colors[color], ' '.join(args), '\033[0m')
 
-def get_list_by_rex(url, rex, proxies=None) -> list:
-    ''' 根据URL和正则提取需要的列表 '''
-    s = requests.Session()
-    s.headers.update(HEADERS)
-    if proxies:
-        s.proxies.update(proxies)
-    print(colorize('info', url))
+def get_content(url, proxies=None) -> str:
+    ''' 根据URL和代理获得内容 '''
+    echo('info', url)
     try:
-        r = s.get(url, timeout=TIMEOUT)
+        r = requests.get(url, headers=HEADERS, proxies=proxies, timeout=TIMEOUT)
         if r.status_code == requests.codes.ok:
-            return re.findall(rex, r.text)
-        else:
-            print(colorize('error', '请求失败', str(r.status_code), url))
+            return r.text
+        echo('error', '请求失败', str(r.status_code), url)
     except Exception as e:
-        print(colorize('error', url, str(e)))
-    return []
+        echo('error', url, str(e))
+    return ''
 
 def get_proxies_thread(site, proxies):
-    ''' 爬取一个站的代理 '''
-    pages = get_list_by_rex(site, r'<h3[\s\S]*?<a.*?(http.*?\.html).*?</a>', PROXIES)
+    ''' 爬取一个站的代理的线程 '''
+    content = get_content(site, SPIDER_PROXIES)
+    pages = re.findall(r'<h3[\s\S]*?<a.*?(http.*?\.html).*?</a>', content)
     for page in pages:
-        proxies += get_list_by_rex(page, r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}', PROXIES)
+        content = get_content(page, SPIDER_PROXIES)
+        proxies += re.findall(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}', content)
 
 def get_proxies_set() -> list:
     ''' 获得所有站的代理并去重 '''
-    spider_pool = []
-    proxies = []
+    spider_pool, proxies = [], []
     for site in SITES:
         t = threading.Thread(target=get_proxies_thread, args=(site, proxies))
         spider_pool.append(t)
@@ -56,39 +48,53 @@ def get_proxies_set() -> list:
         t.join()
     return list(set(proxies))
 
-def check_proxies_thread(proxies, callback):
-    ''' 检查代理是否有效 '''
+def check_proxies_thread(check_url, proxies, callback):
+    ''' 检查代理是否有效的线程 '''
     for proxy in proxies:
-        proxy = 'http://' + proxy
-        ip = get_list_by_rex(
-            url='http://2019.ip138.com/ic.asp',
-            rex=r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}',
-            proxies={'http': proxy}
-        )
-        # 如果返回的IP和代理所用IP一致则判断有效
-        if ip and ip[0] in proxy:
-            print(colorize('success', proxy, 'checked ok.'))
-            callback(proxy)
+        proxy = proxy.strip()
+        proxy = proxy if proxy.startswith('http://') else 'http://' + proxy
+        content = get_content(check_url, proxies={'http': proxy})
+        if content:
+            if check_url == IP138:
+                # 如果能获取到IP，则比对一下IP和代理所用IP一致则判断有效
+                ip = re.findall(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', content)
+                if ip and ip[0] in proxy:
+                    callback(proxy)
+            else:
+                callback(proxy)
 
-def check_and_save_proxies(filename, proxies):
-    ''' 获得所有检查过的代理 '''
+def check_and_save_proxies(check_url, proxies, output_file):
+    ''' 验证和保存所有代理 '''
     checker_pool = []
+    open(output_file, 'w').write('')
     def save_proxy(proxy):
-        with open(filename, 'a') as f:
-            f.write(proxy + '\n')
+        echo('success', proxy, 'checked ok.')
+        open(output_file, 'a').write(proxy + '\n')
     for i in range(0, len(proxies), 20):
-        t = threading.Thread(target=check_proxies_thread, args=(proxies[i:i+20], save_proxy))
+        t = threading.Thread(target=check_proxies_thread, args=(check_url, proxies[i:i+20], save_proxy))
         checker_pool.append(t)
         t.start()
     for t in checker_pool:
         t.join()
 
 if __name__ == '__main__':
-    start = time.time()
-    proxies = get_proxies_set()
-    check_and_save_proxies('proxies.txt', proxies)
-    stop = time.time()
-    print(colorize('success', '\n代理总数: %s' % len(proxies)))
-    print(colorize('success', '有效代理数: %s' % len(open('proxies.txt', 'r').readlines())))
-    print(colorize('success', '时间消耗: %s' % datetime.timedelta(seconds=(stop - start))))
-    print(colorize('success', 'Done. :)\n'))
+    input_file, output_file, check_url = '', 'proxies.txt', IP138
+    if len(sys.argv) > 1:
+        try:
+            opts, _ = getopt.getopt(sys.argv[1:], 'u:f:o:')
+        except getopt.GetoptError as e:
+            echo('error', str(e))
+            sys.exit(2)
+        for o, a in opts:
+            if o in ('-f'): input_file = os.path.abspath(a)
+            elif o in ('-u'): check_url = a
+            elif o in ('-o'): output_file = os.path.abspath(a)
+            else: assert False, 'unhandled option'
+    start = datetime.datetime.now()
+    proxies = open(input_file, 'r').readlines() if input_file else get_proxies_set()
+    check_and_save_proxies(check_url, proxies, output_file)
+    stop = datetime.datetime.now()
+    note = '\n代理总数：%s\n有效代理数：%s\n结果文件：%s\n时间消耗：%s\n' % \
+            (len(proxies), len(open(output_file, 'r').readlines()), 
+            output_file, stop - start)
+    echo('success', note)
