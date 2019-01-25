@@ -2,7 +2,7 @@
 
 100行Python代码快速获得一个代理池，两分钟获得数千个有效代理。
 
-如果爬虫需要翻墙，请自行修改SPIDER_PROXIES的配置，参考格式：
+爬虫一般情况下需要FQ，请自行修改SPIDER_PROXIES的配置，参考格式：
 ```
 SPIDER_PROXIES = {'http': 'socks5://127.0.0.1:1086', 'https': 'socks5://127.0.0.1:1086'}
 ```
