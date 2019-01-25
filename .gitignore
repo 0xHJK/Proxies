@@ -2,3 +2,4 @@ __pycache__
 *.txt
 .idea
 .vscode
+!example.txt
