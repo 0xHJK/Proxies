@@ -1,5 +1,4 @@
 __pycache__
-proxies.txt
-tmp.txt
+*.txt
 .idea
 .vscode
