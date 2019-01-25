@@ -1,14 +1,14 @@
-#!/usr/bin/env python  
-#-*- coding:utf-8 -*-  
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
 """
-@author: HJK 
+@author: HJK
 """
 import os, sys, getopt, datetime, re, threading, platform, requests
 
 SITES = ['http://www.proxyserverlist24.top/', 'http://www.live-socks.net/']
 HEADERS = {'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Win64; x64; Trident/6.0)'}
 TIMEOUT = 5
-SPIDER_PROXIES = {'http': 'socks5://127.0.0.1:1086', 'https': 'socks5://127.0.0.1:1086'}
+SPIDER_PROXIES = None
 IP138 = 'http://2019.ip138.com/ic.asp'
 
 def echo(color, *args):
@@ -95,6 +95,6 @@ if __name__ == '__main__':
     check_and_save_proxies(check_url, proxies, output_file)
     stop = datetime.datetime.now()
     note = '\n代理总数：%s\n有效代理数：%s\n结果文件：%s\n时间消耗：%s\n' % \
-            (len(proxies), len(open(output_file, 'r').readlines()), 
+            (len(proxies), len(open(output_file, 'r').readlines()),
             output_file, stop - start)
     echo('success', note)
