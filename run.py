@@ -9,7 +9,7 @@ SITES = ['http://www.proxyserverlist24.top/', 'http://www.live-socks.net/']
 HEADERS = {'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Win64; x64; Trident/6.0)'}
 TIMEOUT = 5
 SPIDER_PROXIES = None
-IP138 = 'http://2019.ip138.com/ic.asp'
+IP138 = 'http://2000019.ip138.com/'
 
 def echo(color, *args):
     colors = {'error': '\033[91m', 'success': '\033[94m', 'info': '\033[93m'}

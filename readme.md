@@ -7,6 +7,8 @@
 SPIDER_PROXIES = {'http': 'socks5://127.0.0.1:1086', 'https': 'socks5://127.0.0.1:1086'}
 ```
 
+> 注：ip138的URL可能会失效，可以访问ip138.com查看源码获得新URL，或修改为其他可返回IP的URL
+
 如果发现新的站点，可以增加SITES的内容
 
 ## USAGE 使用方法
